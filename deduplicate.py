@@ -1,43 +1,3 @@
-"""
-deduplicate.py — Multi-Pass Deduplication Module
-GlobalTech Corp HR Integration Pipeline
-
-Operates on the cleaned DataFrames produced by clean.py and applies four
-ordered deduplication passes plus ghost-employee detection.
-
-Pass overview
-─────────────
-Pass 1  Exact employee ID match (within company namespace)
-        Same GT-XXXXXX / AC-XXXXXX appearing in multiple sources (HRIS, Payroll,
-        Benefits) or colliding within a single source.
-        Resolution: HRIS > Payroll > Benefits source priority.
-        Collisions between two different people sharing the same canonical ID
-        (artifact of ACQ_DUP_NNNNN + ACQ_NNNNN both mapping to AC-NNNNNN) are
-        detected, quarantined, and flagged for review rather than silently dropped.
-
-Pass 2  Email match (cross-company)
-        Same email address in both GlobalTech_HRIS and AcquiredCo_HRIS rows
-        indicates the same person (typically a contractor who held roles at both
-        companies).  GlobalTech record kept as golden; AcquiredCo record quarantined.
-
-Pass 3  Fuzzy name + hire-date proximity (rapidfuzz)
-        Compares full names across GlobalTech and AcquiredCo employees whose
-        hire dates are within ±30 days of each other (blocking to avoid O(n²)).
-        Pairs with rapidfuzz.token_sort_ratio ≥ 88 are flagged as probable_match
-        and written to a review file — they are NOT auto-merged.
-
-Ghost employee detection
-        Payroll employee_ids with no corresponding HRIS record are a fraud and
-        compliance risk.  They are extracted to a separate ghost_employees output
-        with ghost_employee = True.
-
-Provenance columns added to every output record
-        source_systems   comma-separated list of sources where this employee_id
-                         appears  (e.g. "globaltech_hris,payroll,benefits")
-        dedup_method     how this record was resolved:
-                         "exact_id" | "email_match" | "fuzzy_name" | "single_source"
-"""
-
 from __future__ import annotations
 
 from typing import TypedDict
@@ -92,30 +52,7 @@ def _pass1_exact_id(
     payroll:   pd.DataFrame,
     benefits:  pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, DeduplicationReport]:
-    """
-    Resolve exact employee ID matches across and within source systems.
 
-    Two sub-cases
-    -------------
-    1a. Intra-HRIS collision
-        Same canonical ID (e.g. AC-000001) appearing on two DIFFERENT people
-        within the employees DataFrame.  These arise when ACQ_NNNNN and
-        ACQ_DUP_NNNNN share a numeric suffix and both normalise to AC-NNNNNN.
-        Detection: group by employee_id; if name or hire_date differs across
-        rows, it is a collision, not a real duplicate.
-        Resolution: keep the record whose source name field does NOT contain
-        "DUP" (i.e. the true unique AcquiredCo employee); quarantine the DUP
-        copy with reason "ID_COLLISION".
-
-    1b. Genuine same-person duplicates (same ID, same name+hire_date)
-        Keep the higher-priority source (HRIS > Payroll > Benefits).
-
-    Cross-source presence
-    ---------------------
-    After deduplication the resulting record receives:
-    - source_systems : comma-sorted string of every source where this ID appears
-    - dedup_method   : "exact_id" for any multi-source record, else "single_source"
-    """
     src = "pass1_exact_id"
     df = employees.copy()
     input_rows = len(df)
@@ -204,24 +141,10 @@ def _pass1_exact_id(
     )
     return df, quarantine, report
 
-
-# ---------------------------------------------------------------------------
-# Pass 2 — Email match (cross-company)
-# ---------------------------------------------------------------------------
-
 def _pass2_email_match(
     employees: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, DeduplicationReport]:
-    """
-    Detect cross-company email matches: same email address in both
-    GlobalTech_HRIS and AcquiredCo_HRIS rows.
 
-    These arise when a contractor or consultant held positions at both
-    companies and used the same personal email in both systems.
-
-    Resolution: GlobalTech record is kept as golden (acquiring company);
-    AcquiredCo record is quarantined.  dedup_method set to "email_match".
-    """
     src = "pass2_email_match"
     df = employees.copy()
     input_rows = len(df)
@@ -266,49 +189,13 @@ def _pass2_email_match(
     logger.info("[%s] Complete — %d in, %d out", src, input_rows, len(df))
     return df, quarantine, report
 
-
-# ---------------------------------------------------------------------------
-# Pass 3 — Fuzzy name + hire-date proximity (rapidfuzz)
-# ---------------------------------------------------------------------------
-
 def _pass3_fuzzy_name(
     employees: pd.DataFrame,
     *,
     threshold:       int = _FUZZY_THRESHOLD,
     date_window_days: int = _DATE_WINDOW_DAYS,
 ) -> tuple[pd.DataFrame, pd.DataFrame, DeduplicationReport]:
-    """
-    Identify probable duplicate employees across GlobalTech and AcquiredCo
-    using fuzzy full-name matching, blocked by hire-date proximity.
 
-    Algorithm
-    ---------
-    1. Build full_name = first_name + " " + last_name for each employee.
-    2. Blocking: for each AcquiredCo employee, find GlobalTech employees
-       whose hire_date falls within ±{date_window_days} days.  This reduces
-       the comparison space from O(GT × ACQ) = 48 million to ~800 K pairs.
-    3. Within each block, compute rapidfuzz.token_sort_ratio(gt_name, acq_name).
-       token_sort_ratio handles word-order variation ("Smith John" ≈ "John Smith").
-    4. Pairs with score ≥ {threshold} are recorded in the probable_matches frame.
-
-    Disposition
-    -----------
-    Matches are flagged, NOT auto-merged — HR must review and confirm before
-    any record is removed.  dedup_method is set to "fuzzy_name" on the
-    AcquiredCo rows involved in a match.
-
-    Parameters
-    ----------
-    employees       : pd.DataFrame from _pass2_email_match output
-    threshold       : minimum token_sort_ratio score (default 88)
-    date_window_days: hire-date block half-width in days (default 30)
-
-    Returns
-    -------
-    employees       : same rows, dedup_method updated for matched ACQ rows
-    probable_matches: one row per matched pair with match metadata
-    report          : DeduplicationReport
-    """
     src = "pass3_fuzzy_name"
     df = employees.copy()
     input_rows = len(df)
@@ -402,32 +289,11 @@ def _pass3_fuzzy_name(
     }
     return df, probable_matches, report
 
-
-# ---------------------------------------------------------------------------
-# Ghost employee detection
-# ---------------------------------------------------------------------------
-
 def _detect_ghost_employees(
     payroll:   pd.DataFrame,
     hris_ids:  set[str],
 ) -> tuple[pd.DataFrame, DeduplicationReport]:
-    """
-    Flag payroll records with no corresponding HRIS record as ghost employees.
 
-    A ghost employee is someone who appears in the payroll system but has no
-    HR record — a fraud and compliance risk that must be investigated before
-    the combined payroll goes live.
-
-    Parameters
-    ----------
-    payroll  : cleaned payroll DataFrame (employee_id already namespaced)
-    hris_ids : set of employee_ids present in the HRIS (employees DataFrame)
-
-    Returns
-    -------
-    ghost_employees : payroll rows with no HRIS counterpart + ghost_employee=True
-    report          : DeduplicationReport
-    """
     src = "ghost_employee_detection"
     ghost_mask = ~payroll["employee_id"].isin(hris_ids)
     ghosts = payroll[ghost_mask].copy()
@@ -460,20 +326,10 @@ def _detect_ghost_employees(
     }
     return ghosts, report
 
-
-# ---------------------------------------------------------------------------
-# Benefits current-enrollment deduplication
-# ---------------------------------------------------------------------------
-
 def _dedup_benefits_current(
     benefits: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Keep the most-recent active enrollment per (employee_id, plan_type).
-    Older enrollments are moved to a history frame.
 
-    Returns (current_benefits, history_benefits).
-    """
     sorted_ben = benefits.sort_values("enrollment_date", na_position="first")
     current    = sorted_ben.drop_duplicates(
         subset=["employee_id", "plan_type"], keep="last"
@@ -490,11 +346,6 @@ def _dedup_benefits_current(
             archived, len(current),
         )
     return current, history
-
-
-# ---------------------------------------------------------------------------
-# Convenience entry-point
-# ---------------------------------------------------------------------------
 
 def dedup_all(
     clean_result: dict[str, pd.DataFrame],
@@ -567,10 +418,6 @@ def dedup_all(
         "reports":          reports,
     }
 
-
-# ---------------------------------------------------------------------------
-# Smoke-test
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     from ingest import ingest_all
     from clean import clean_all

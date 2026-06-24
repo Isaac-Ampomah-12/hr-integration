@@ -1,26 +1,5 @@
 """
 ingest.py — Multi-Source HR Data Ingestion Module
-GlobalTech Corp HR Integration Pipeline
-
-Loads all four source systems into standardised Pandas DataFrames.
-
-Standard employee schema (target of align_to_standard_schema):
-    employee_id       str   Canonical ID; AcquiredCo records carry the original
-                            "ACQ_XXXXX" prefix to prevent collision with GlobalTech's
-                            integer ID range (both cover 1–15 000).
-    source_system     str   Originating system: GlobalTech_HRIS | AcquiredCo_HRIS
-    first_name        str
-    last_name         str
-    email             str
-    department        str
-    job_title         str
-    hire_date         str   ISO-8601 date YYYY-MM-DD; time component stripped from JSON
-    country           str
-    employment_type   str   Normalised: Full-Time | Part-Time | Contractor
-    employment_status str   Active | Inactive | On Leave;
-                            GlobalTech Workday exports only active roster so field
-                            defaults to "Active" for that source.
-    manager_id        str   Canonical ID; same prefix convention as employee_id
 """
 
 import json
@@ -60,31 +39,7 @@ def ingest_globaltech_hris(
     *,
     encoding: str = CONFIG["globaltech_encoding"],
 ) -> pd.DataFrame:
-    """
-    Load the GlobalTech Workday HRIS export (CSV, UTF-8).
 
-    Parameters
-    ----------
-    filepath : str | Path
-        Path to globaltech_hris.csv.
-    encoding : str
-        File encoding; Workday guarantees UTF-8, so the default is safe.
-
-    Returns
-    -------
-    pd.DataFrame
-        Raw DataFrame with original column names preserved.
-        Columns: employee_id, first_name, last_name, email, department,
-                 job_title, hire_date, country, employment_type, manager_id.
-        Returns an empty DataFrame (with no columns) on any IO or parse error.
-
-    Notes
-    -----
-    - employee_id and manager_id are read as str to preserve leading zeros and
-      avoid float conversion of NaN manager_ids.
-    - Department codes vary by business unit; they are kept verbatim here and
-      normalised downstream if a master department list is provided.
-    """
     source = "GlobalTech_HRIS"
     path = Path(filepath)
 
@@ -98,7 +53,7 @@ def ingest_globaltech_hris(
             encoding=encoding,
             dtype={"employee_id": str, "manager_id": str},
         )
-    except Exception as exc: 
+    except Exception as exc:
         logger.error("[%s] Failed to read CSV: %s", source, exc)
         return pd.DataFrame()
 
@@ -154,36 +109,7 @@ def ingest_acquiredco_hris(
     *,
     page_size: int = CONFIG["acquiredco_page_size"],
 ) -> pd.DataFrame:
-    """
-    Load AcquiredCo BambooHR HRIS data from a local JSON file, simulating
-    paginated API retrieval (100 records/page, matching BambooHR's default).
 
-    Parameters
-    ----------
-    filepath : str | Path
-        Path to acquiredco_api.json.
-    page_size : int
-        Records per simulated API page (default 100).
-
-    Returns
-    -------
-    pd.DataFrame
-        Flattened DataFrame — one row per employee.
-        Columns: employee_identifier, first_name, last_name, full_name,
-                 email, department, role, location, hire_timestamp,
-                 employment_type, employment_status, manager_employee_id.
-        Returns an empty DataFrame on any IO or parse error.
-
-    Notes
-    -----
-    - employee_identifier carries the original "ACQ_XXXXX" string.
-      align_to_standard_schema() preserves this prefix as the canonical ID
-      to prevent collision with GlobalTech's numeric ID range.
-    - employment_type abbreviations (FT/PT/CONTRACTOR) are kept as-is here;
-      normalisation to long form happens in align_to_standard_schema().
-    - Malformed employee objects (missing expected keys) are dead-lettered
-      individually; the rest of the page continues to load.
-    """
     source = "AcquiredCo_HRIS"
     path = Path(filepath)
 
@@ -249,46 +175,12 @@ def ingest_acquiredco_hris(
     )
     return df
 
-
-# ---------------------------------------------------------------------------
-# Source 3: Combined Payroll — ADP Excel export
-# ---------------------------------------------------------------------------
-
 def ingest_payroll(
     filepath: str | Path = CONFIG["payroll_xlsx"],
     *,
     sheet_name: str = CONFIG["payroll_sheet"],
 ) -> pd.DataFrame:
-    """
-    Load the ADP combined payroll export (Excel .xlsx).
 
-    Parameters
-    ----------
-    filepath : str | Path
-        Path to payroll_data.xlsx.
-    sheet_name : str
-        Worksheet to read (default "Payroll").
-
-    Returns
-    -------
-    pd.DataFrame
-        Raw DataFrame with all original columns preserved.
-        Columns: employee_id, source, base_salary, currency,
-                 pay_frequency, bonus_target_pct, effective_date.
-        Returns an empty DataFrame on any IO or parse error.
-
-    Notes
-    -----
-    - base_salary is in mixed currencies (USD, EUR, GBP); conversion to a
-      single base currency is performed in the transform layer.
-    - Duplicate employee_id rows (~7 800 across the 19 000-row file) are
-      retained here so the transform layer can apply a deterministic
-      deduplication policy (keep most-recent effective_date) with full
-      audit trail preserved.
-    - The "source" column ("GlobalTech" | "AcquiredCo") is used downstream
-      to resolve which employee namespace an employee_id belongs to, since
-      AcquiredCo IDs numerically overlap with GlobalTech's range.
-    """
     source = "Payroll_ADP"
     path = Path(filepath)
 
@@ -313,40 +205,8 @@ def ingest_payroll(
     )
     return df
 
-
-# ---------------------------------------------------------------------------
-# Source 4: Benefits — MedShield XML export
-# ---------------------------------------------------------------------------
-
 def ingest_benefits(filepath: str | Path = CONFIG["benefits_xml"]) -> pd.DataFrame:
-    """
-    Load the MedShield benefits enrollment XML export using ElementTree.
 
-    Parameters
-    ----------
-    filepath : str | Path
-        Path to benefits_enrollment.xml.
-
-    Returns
-    -------
-    pd.DataFrame
-        One row per enrollment record; employees may appear multiple times
-        when enrolled in more than one plan.
-        Columns: employee_id, plan_type, coverage_level, enrollment_date,
-                 premium_employee, premium_employer.
-        Returns an empty DataFrame on any IO or parse error.
-
-    Notes
-    -----
-    - This source covers GlobalTech employees only.  Missing AcquiredCo
-      records on a downstream join should be treated as "not enrolled",
-      not as a data quality issue.
-    - employee_id is an integer-string matching GlobalTech's ID range;
-      stored as str for join compatibility with the standard schema.
-    - Malformed <enrollment> elements (empty employee_id, non-numeric
-      premiums) are dead-lettered individually; the rest of the file
-      continues to parse.
-    """
     source = "Benefits_MedShield"
     path = Path(filepath)
 
@@ -389,11 +249,6 @@ def ingest_benefits(filepath: str | Path = CONFIG["benefits_xml"]) -> pd.DataFra
         source, len(df), dead_count, path.name,
     )
     return df
-
-
-# ---------------------------------------------------------------------------
-# Schema alignment — maps both HRIS sources to the standard employee schema
-# ---------------------------------------------------------------------------
 
 def align_to_standard_schema(
     globaltech_df: pd.DataFrame,
@@ -470,15 +325,7 @@ def align_to_standard_schema(
     return combined
 
 def dead_letter_summary() -> pd.DataFrame:
-    """
-    Return a DataFrame of all dead-lettered records and log a count summary.
 
-    Returns
-    -------
-    pd.DataFrame
-        Columns: source, error, raw_record.
-        Empty DataFrame if no records were dead-lettered.
-    """
     if not DEAD_LETTER:
         logger.info("Dead-letter queue is empty.")
         return pd.DataFrame(columns=["source", "error", "raw_record"])
@@ -489,19 +336,7 @@ def dead_letter_summary() -> pd.DataFrame:
     return df
 
 def ingest_all() -> dict[str, pd.DataFrame]:
-    """
-    Run all four ingestion functions and return all DataFrames in one call.
 
-    File paths and ingestion settings are read from config.py.
-
-    Returns
-    -------
-    dict[str, pd.DataFrame] with keys:
-        "employees"   — unified standard-schema employee DataFrame
-        "payroll"     — raw ADP payroll DataFrame (pre-deduplication)
-        "benefits"    — raw MedShield benefits DataFrame
-        "dead_letter" — all dead-lettered records across all sources
-    """
     gt_raw   = ingest_globaltech_hris()
     aq_raw   = ingest_acquiredco_hris()
     payroll  = ingest_payroll()

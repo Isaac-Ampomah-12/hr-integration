@@ -1,37 +1,5 @@
 """
-clean.py — Data Cleaning & Transformation Module
-GlobalTech Corp HR Integration Pipeline
-
-Problem classes handled
------------------------
-1. Name standardization
-   - Unicode NFC normalization (consistent multi-byte encoding)
-   - Title-case with correct handling of Mc/Mac prefixes, hyphenated names,
-     and apostrophe particles (O'Brien, D'Angelo)
-
-2. Employee ID resolution
-   - GlobalTech plain integers and AcquiredCo "ACQ_XXXXX" strings both
-     re-keyed to a collision-safe namespaced format:
-       GlobalTech  "1042"        → "GT-001042"
-       AcquiredCo  "ACQ_01042"   → "AC-001042"
-   - manager_id references updated under the same scheme.
-   - Payroll and benefits employee_ids aligned to the same namespace.
-
-3. Currency normalization  (payroll only)
-   - Formatted salary strings ("$85,000", "£70,000", "€90,000") stripped
-     and parsed to float.
-   - base_salary converted to USD using fixed exchange rates (config).
-   - base_salary_usd_annual added: base_salary_usd × pay-frequency multiplier
-     (Annual × 1, Monthly × 12, Bi-Weekly × 26).
-
-4. Department taxonomy mapping  (employees only)
-   - Both sources mapped to a canonical department list (config).
-   - Unmapped values logged for manual review; original value preserved.
-
-5. Date standardization
-   - Supported input formats: YYYY-MM-DD · MM/DD/YYYY · DD-Mon-YYYY
-   - All output as datetime64[ns].
-   - Rows with hire_date before 1970-01-01 or after today are flagged.
+Data Cleaning & Transformation Module
 """
 
 import re
@@ -43,11 +11,6 @@ import pandas as pd
 
 from config import CONFIG, logger
 
-
-# ---------------------------------------------------------------------------
-# CleanReport
-# ---------------------------------------------------------------------------
-
 class CleanReport(TypedDict):
     source:         str
     input_rows:     int
@@ -56,20 +19,8 @@ class CleanReport(TypedDict):
     fixes_applied:  dict[str, int]
     issues_flagged: dict[str, int]
 
-
-# ---------------------------------------------------------------------------
-# Private helpers
-# ---------------------------------------------------------------------------
-
-# ── 1. Name normalization ────────────────────────────────────────────────
-
 def _normalize_name_token(token: str) -> str:
-    """
-    Title-case a single token, handling Mc/Mac prefixes.
-      "mcdonald" → "McDonald"
-      "macgregor" → "MacGregor"
-      "smith"     → "Smith"
-    """
+
     if not token:
         return token
     lo = token.lower()
@@ -81,16 +32,7 @@ def _normalize_name_token(token: str) -> str:
 
 
 def _normalize_name(name: str) -> str:
-    """
-    Apply Unicode NFC normalization and robust title-casing to a name string.
 
-    Handles:
-    - Accented characters (José → José, NFC-normalized)
-    - Hyphenated names  (anne-marie → Anne-Marie)
-    - Multi-word names  (van der berg → Van Der Berg)
-    - Apostrophe names  (o'brien → O'Brien, d'angelo → D'Angelo)
-    - Mc/Mac prefixes   (mcdonald → McDonald, macgregor → MacGregor)
-    """
     if not isinstance(name, str) or not name.strip():
         return name
 
@@ -117,16 +59,7 @@ _ID_DIGIT_RE = re.compile(r"(\d+)$")
 
 
 def _format_employee_id(raw_id: str, source_system: str) -> str:
-    """
-    Reformat a raw employee_id into the GT-/AC- namespaced scheme.
 
-    Examples
-    --------
-    "1042",       "GlobalTech_HRIS"  → "GT-001042"
-    "15000",      "GlobalTech_HRIS"  → "GT-015000"
-    "ACQ_01042",  "AcquiredCo_HRIS"  → "AC-001042"
-    "ACQ_DUP_00185", "AcquiredCo_HRIS" → "AC-000185"
-    """
     prefix = CONFIG["employee_id_prefix"].get(source_system, "XX")
     m = _ID_DIGIT_RE.search(str(raw_id))
     if not m:
@@ -135,12 +68,7 @@ def _format_employee_id(raw_id: str, source_system: str) -> str:
 
 
 def _format_manager_id(raw_mgr: str) -> str:
-    """
-    Reformat a raw manager_id into the GT-/AC- scheme.
 
-    Numeric strings are GlobalTech IDs; "ACQ_…" strings are AcquiredCo IDs;
-    empty strings mean no manager (top-level employee).
-    """
     if not raw_mgr or str(raw_mgr).strip() in ("", "nan"):
         return ""
     s = str(raw_mgr).strip()
@@ -159,12 +87,7 @@ _DATE_FORMATS = ["%Y-%m-%d", "%m/%d/%Y", "%d-%b-%Y"]
 
 
 def _parse_dates(series: pd.Series) -> pd.Series:
-    """
-    Parse a string date Series to datetime64[ns], trying multiple formats
-    in sequence: YYYY-MM-DD · MM/DD/YYYY · DD-Mon-YYYY (e.g. 15-Jan-2022).
 
-    Values that cannot be parsed with any format become NaT.
-    """
     result = pd.Series(pd.NaT, index=series.index, dtype="datetime64[ns]")
     remaining = series.notna() & (series.astype(str).str.strip() != "")
 
@@ -182,11 +105,7 @@ def _parse_dates(series: pd.Series) -> pd.Series:
 # ── 4. Salary parsing ─────────────────────────────────────────────────────
 
 def _parse_salary(series: pd.Series) -> pd.Series:
-    """
-    Coerce a mixed-format salary series to float.
-    Handles plain integers and currency-symbol/comma strings:
-    "$70,315" → 70315.0 · "£140,888" → 140888.0 · "€118,496" → 118496.0
-    """
+
     cleaned = (
         series.astype(str)
         .str.replace(r"[$£€]", "", regex=True)
@@ -199,7 +118,7 @@ def _parse_salary(series: pd.Series) -> pd.Series:
 # ── 5. String whitespace strip ────────────────────────────────────────────
 
 def _strip_string_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
-    """Strip leading/trailing whitespace from every string column. Returns (df, cells_changed)."""
+
     changed = 0
     for col in df.select_dtypes(include=["object", "str"]).columns:
         stripped = df[col].str.strip()
@@ -208,35 +127,8 @@ def _strip_string_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
         df[col] = stripped
     return df, changed
 
-
-# ---------------------------------------------------------------------------
-# clean_employees
-# ---------------------------------------------------------------------------
-
 def clean_employees(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
-    """
-    Clean and transform the unified employee DataFrame.
 
-    Transformations
-    ---------------
-    1. Whitespace stripping across all string columns.
-    2. Name normalization: Unicode NFC + title-case (handles Mc/Mac, hyphens,
-       apostrophes).  Original values saved to first_name_raw / last_name_raw.
-    3. Employee ID namespacing: "1042" → "GT-001042",
-       "ACQ_01042" → "AC-001042".  manager_id updated under the same scheme.
-    4. Department taxonomy mapping: raw department name → canonical name from
-       CONFIG["department_map"].  Unmapped values logged and left as-is.
-    5. hire_date parsed to datetime64[ns] (formats: YYYY-MM-DD, MM/DD/YYYY,
-       DD-Mon-YYYY).  Dates before 1970-01-01 or after today are flagged.
-
-    Issues flagged (not dropped)
-    ----------------------------
-    - Null department / country
-    - Invalid email format
-    - Invalid employment_type / employment_status values
-    - Unmapped department codes
-    - Implausible hire dates
-    """
     src = "clean_employees"
     df = df.copy()
     input_rows = len(df)
@@ -374,25 +266,7 @@ def clean_employees(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
 # ---------------------------------------------------------------------------
 
 def clean_payroll(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
-    """
-    Clean and transform the ADP payroll DataFrame.
 
-    Transformations
-    ---------------
-    1. base_salary parsed to float (strips currency symbols and commas).
-    2. Employee ID namespaced to GT-/AC- using the source column.
-    3. Currency conversion: base_salary_usd = base_salary × fx_rate (config).
-    4. Pay-frequency normalization: salary_usd_annual = base_salary_usd × multiplier.
-       Multipliers: Annual × 1, Monthly × 12, Bi-Weekly × 26.
-    5. effective_date parsed to datetime64[ns].
-    6. Deduplication: for each (employee_id, source) pair, keep the row with
-       the most-recent effective_date.
-
-    New columns added
-    -----------------
-    base_salary_usd    float64   base_salary converted to USD
-    salary_usd_annual  float64   annualised USD salary
-    """
     src = "clean_payroll"
     df = df.copy()
     input_rows = len(df)
@@ -511,16 +385,7 @@ def clean_payroll(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
 # ---------------------------------------------------------------------------
 
 def clean_benefits(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
-    """
-    Clean and transform the MedShield benefits enrollment DataFrame.
 
-    Transformations
-    ---------------
-    1. Employee ID namespaced to GT- (MedShield covers GlobalTech employees only).
-    2. enrollment_date parsed to datetime64[ns] (formats: YYYY-MM-DD, MM/DD/YYYY,
-       DD-Mon-YYYY).
-    3. Premiums validated as non-negative.
-    """
     src = "clean_benefits"
     df = df.copy()
     input_rows = len(df)
@@ -576,22 +441,7 @@ def clean_benefits(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
 def clean_all(
     ingest_result: dict[str, pd.DataFrame],
 ) -> dict[str, pd.DataFrame | list[CleanReport]]:
-    """
-    Run all three cleaning functions and return cleaned DataFrames.
 
-    Parameters
-    ----------
-    ingest_result : dict
-        Output of ingest.ingest_all() — keys "employees", "payroll", "benefits".
-
-    Returns
-    -------
-    dict with keys:
-        "employees"   — cleaned employee DataFrame
-        "payroll"     — cleaned payroll DataFrame
-        "benefits"    — cleaned benefits DataFrame
-        "reports"     — list[CleanReport]
-    """
     emp_clean, emp_report = clean_employees(ingest_result["employees"])
     pay_clean, pay_report = clean_payroll(ingest_result["payroll"])
     ben_clean, ben_report = clean_benefits(ingest_result["benefits"])

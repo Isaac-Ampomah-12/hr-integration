@@ -1,24 +1,3 @@
-"""
-validate.py — Data Quality Validation Module (Deliverable 4)
-GlobalTech Corp HR Integration Pipeline
-
-DataQualityValidator class running 15 checks across 7 categories:
-
-  NOT NULL (6)              employee_id, first_name, last_name, email, department, country
-  UNIQUE (2)                employee_id, email  (post-dedup)
-  VALUES IN SET (2)         employment_type ∈ {Full-Time, Part-Time, Contractor}
-                            currency ∈ {USD, EUR, GBP}
-  REGEX (2)                 email format, employee_id format (GT-/AC- + 6 digits)
-  NUMERIC RANGE (1)         salary_usd_annual  15 000 – 2 000 000
-  DATE RANGE (1)            hire_date  1970-01-01 – today
-  REFERENTIAL INTEGRITY (1) every non-empty manager_id must exist as an employee_id
-
-Pipeline gate: halt if more than 2 checks fail.
-Outputs written to CONFIG["output_dir"]:
-  validation_report.csv
-  validation_report.html
-"""
-
 from __future__ import annotations
 
 import re
@@ -29,13 +8,6 @@ import pandas as pd
 
 from config import CONFIG, logger
 
-
-# ---------------------------------------------------------------------------
-# HTML report template (uses %-substitution to avoid CSS-brace escaping)
-# ---------------------------------------------------------------------------
-
-# Placeholders: __SUMMARY__ __ROWS__ __GENERATED__
-# Using __NAME__ sentinels avoids CSS-brace escaping issues with % or .format()
 _HTML_TEMPLATE = (
     "<!DOCTYPE html>\n"
     "<html lang='en'>\n"
@@ -101,22 +73,7 @@ _HTML_TEMPLATE = (
     "</html>\n"
 )
 
-
-# ---------------------------------------------------------------------------
-# DataQualityValidator
-# ---------------------------------------------------------------------------
-
 class DataQualityValidator:
-    """
-    Runs 15 data-quality checks against the post-deduplication DataFrames.
-
-    Usage
-    -----
-    validator = DataQualityValidator(employees, payroll, benefits)
-    report    = validator.validate()          # pd.DataFrame, 15 rows
-    gate_ok   = validator.gate(report)        # True = pipeline may continue
-    csv, html = validator.export(report)      # write output files
-    """
 
     GATE_THRESHOLD = 2      # halt if strictly more than this many checks fail
     SALARY_LO      = 15_000
@@ -280,10 +237,7 @@ class DataQualityValidator:
     # ── Public: run all checks ────────────────────────────────────────────
 
     def validate(self) -> pd.DataFrame:
-        """
-        Execute all 15 checks and return a report DataFrame with columns:
-        check, description, total, passed, failed, pass_rate, status
-        """
+
         self._results.clear()
         emp = self._emp
         pay = self._pay
@@ -354,10 +308,7 @@ class DataQualityValidator:
     # ── Public: pipeline gate ─────────────────────────────────────────────
 
     def gate(self, report: pd.DataFrame) -> bool:
-        """
-        Return True if the pipeline may continue, False if it should halt.
-        Logs CRITICAL when fail_count > GATE_THRESHOLD.
-        """
+
         fail_count = int((report["status"] == "FAIL").sum())
         if fail_count > self.GATE_THRESHOLD:
             logger.critical(
@@ -460,21 +411,7 @@ class DataQualityValidator:
 # ---------------------------------------------------------------------------
 
 def validate_all(dedup_result: dict) -> tuple[pd.DataFrame, bool]:
-    """
-    Run all validation checks on the post-dedup DataFrames, enforce the
-    pipeline gate, and write CSV + HTML outputs.
 
-    Parameters
-    ----------
-    dedup_result : dict
-        Output of deduplicate.dedup_all() — keys "employees", "payroll", "benefits".
-
-    Returns
-    -------
-    (report, gate_passed)
-        report      — pd.DataFrame with one row per check
-        gate_passed — True if pipeline may continue, False if halted
-    """
     validator = DataQualityValidator(
         employees=dedup_result["employees"],
         payroll=dedup_result["payroll"],

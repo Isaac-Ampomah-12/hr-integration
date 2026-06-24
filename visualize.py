@@ -1,27 +1,3 @@
-"""
-visualize.py — EDA & Visualization Report (Deliverable 5)
-GlobalTech Corp HR Integration Pipeline
-
-Produces a 6-chart professional visualization report saved as a high-resolution
-PNG at 300 DPI minimum.
-
-Charts
-------
-1  Headcount by Department            horizontal bar (18 departments)
-2  Headcount by Country               horizontal bar (top 20 countries)
-3  Salary Distribution by Type        violin with log y-axis
-4  Tenure Distribution                histogram with mean/median lines
-5  Benefits Enrollment Rate           horizontal bar (GlobalTech employees)
-6  Data Quality Summary               horizontal grouped bar (log x-axis)
-
-Every chart has a title, axis labels, gridlines, and a data source annotation.
-Colorblind-safe Okabe-Ito palette is used throughout.
-
-Output
-------
-  CONFIG["output_dir"] / "eda_report.png"
-"""
-
 from __future__ import annotations
 
 from datetime import date
@@ -363,19 +339,7 @@ def generate_report(
     validation_report: pd.DataFrame,
     output_path:       Path | None = None,
 ) -> Path:
-    """
-    Render 6 charts into a single figure and save as a 300 DPI PNG.
 
-    Parameters
-    ----------
-    dedup_result      : output of deduplicate.dedup_all()
-    validation_report : output of validate.validate_all() (the pd.DataFrame)
-    output_path       : override default path (CONFIG["output_dir"]/eda_report.png)
-
-    Returns
-    -------
-    Path to the saved PNG file.
-    """
     employees = dedup_result["employees"]
     payroll   = dedup_result["payroll"]
     benefits  = dedup_result["benefits"]

@@ -2666,3 +2666,116 @@
 2026-06-22 19:41:32,989 [INFO]   Ghost report    : Data/processed/ghost_employees.csv
 2026-06-22 19:41:32,989 [INFO]   Probable matches: Data/processed/probable_matches_review.csv
 2026-06-22 19:41:32,989 [INFO] ============================================================
+2026-06-24 09:07:02,677 [INFO] =================================================================
+2026-06-24 09:07:02,678 [INFO] GlobalTech HR Integration Pipeline  —  2026-06-24
+2026-06-24 09:07:02,678 [INFO] =================================================================
+2026-06-24 09:07:02,678 [INFO] --- Deliverable 1: Ingestion ---
+2026-06-24 09:07:02,704 [INFO] [GlobalTech_HRIS] Loaded 15000 records from globaltech_hris.csv
+2026-06-24 09:07:02,712 [INFO] [AcquiredCo_HRIS] API envelope reports 3200 total records; paginating at page_size=100
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 0 — 100 records fetched (cumulative: 100)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 1 — 100 records fetched (cumulative: 200)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 2 — 100 records fetched (cumulative: 300)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 3 — 100 records fetched (cumulative: 400)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 4 — 100 records fetched (cumulative: 500)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 5 — 100 records fetched (cumulative: 600)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 6 — 100 records fetched (cumulative: 700)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 7 — 100 records fetched (cumulative: 800)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 8 — 100 records fetched (cumulative: 900)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 9 — 100 records fetched (cumulative: 1000)
+2026-06-24 09:07:02,713 [INFO] [AcquiredCo_HRIS] Page 10 — 100 records fetched (cumulative: 1100)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 11 — 100 records fetched (cumulative: 1200)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 12 — 100 records fetched (cumulative: 1300)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 13 — 100 records fetched (cumulative: 1400)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 14 — 100 records fetched (cumulative: 1500)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 15 — 100 records fetched (cumulative: 1600)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 16 — 100 records fetched (cumulative: 1700)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 17 — 100 records fetched (cumulative: 1800)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 18 — 100 records fetched (cumulative: 1900)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 19 — 100 records fetched (cumulative: 2000)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 20 — 100 records fetched (cumulative: 2100)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 21 — 100 records fetched (cumulative: 2200)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 22 — 100 records fetched (cumulative: 2300)
+2026-06-24 09:07:02,714 [INFO] [AcquiredCo_HRIS] Page 23 — 100 records fetched (cumulative: 2400)
+2026-06-24 09:07:02,715 [INFO] [AcquiredCo_HRIS] Page 24 — 100 records fetched (cumulative: 2500)
+2026-06-24 09:07:02,715 [INFO] [AcquiredCo_HRIS] Page 25 — 100 records fetched (cumulative: 2600)
+2026-06-24 09:07:02,715 [INFO] [AcquiredCo_HRIS] Page 26 — 100 records fetched (cumulative: 2700)
+2026-06-24 09:07:02,715 [INFO] [AcquiredCo_HRIS] Page 27 — 100 records fetched (cumulative: 2800)
+2026-06-24 09:07:02,715 [INFO] [AcquiredCo_HRIS] Page 28 — 100 records fetched (cumulative: 2900)
+2026-06-24 09:07:02,715 [INFO] [AcquiredCo_HRIS] Page 29 — 100 records fetched (cumulative: 3000)
+2026-06-24 09:07:02,715 [INFO] [AcquiredCo_HRIS] Page 30 — 100 records fetched (cumulative: 3100)
+2026-06-24 09:07:02,715 [INFO] [AcquiredCo_HRIS] Page 31 — 100 records fetched (cumulative: 3200)
+2026-06-24 09:07:02,720 [INFO] [AcquiredCo_HRIS] Ingestion complete — 3200 records loaded, 0 dead-lettered
+2026-06-24 09:07:03,573 [INFO] [Payroll_ADP] Loaded 19000 records (7845 duplicate employee_id rows) from payroll_data.xlsx
+2026-06-24 09:07:03,727 [INFO] [Benefits_MedShield] Loaded 12000 enrollment records (0 dead-lettered) from benefits_enrollment.xml
+2026-06-24 09:07:03,734 [INFO] [align] GlobalTech HRIS — 15000 rows mapped to standard schema
+2026-06-24 09:07:03,736 [INFO] [align] AcquiredCo HRIS — 3200 rows mapped to standard schema
+2026-06-24 09:07:03,737 [INFO] [align] Combined employee DataFrame — 18200 total rows
+2026-06-24 09:07:03,737 [INFO] ============================================================
+2026-06-24 09:07:03,737 [INFO] INGESTION COMPLETE
+2026-06-24 09:07:03,737 [INFO]   employees   :  18200 records
+2026-06-24 09:07:03,737 [INFO]   payroll     :  19000 records
+2026-06-24 09:07:03,737 [INFO]   benefits    :  12000 records
+2026-06-24 09:07:03,737 [INFO]   dead-letter :      0 records
+2026-06-24 09:07:03,737 [INFO] ============================================================
+2026-06-24 09:07:03,737 [INFO] Dead-letter queue is empty.
+2026-06-24 09:07:03,737 [INFO] --- Deliverable 2: Cleaning ---
+2026-06-24 09:07:03,779 [INFO] [clean_employees] All names already well-formed (no changes)
+2026-06-24 09:07:04,470 [INFO] [clean_employees] Namespaced 18200 employee_ids and manager_ids (GT-/AC- scheme)
+2026-06-24 09:07:04,473 [WARNING] [clean_employees] 64 rows have null department (sources: {'GlobalTech_HRIS': 64})
+2026-06-24 09:07:04,473 [INFO] [clean_employees] Mapped 18136 department values to standard taxonomy
+2026-06-24 09:07:04,474 [WARNING] [clean_employees] 41 rows have null country (sources: {'GlobalTech_HRIS': 41})
+2026-06-24 09:07:04,482 [INFO] [clean_employees] Complete — 18200 rows in/out, fixes={'employee_ids_namespaced': 18200, 'departments_mapped': 18136, 'hire_date_parsed': 18200}, issues={'null_department': 64, 'null_country': 41}
+2026-06-24 09:07:04,496 [INFO] [clean_payroll] Parsed 953 formatted salary strings (e.g. '$70,315' → 70315.0)
+2026-06-24 09:07:04,564 [INFO] [clean_payroll] Namespaced 19000 payroll employee_ids (GT-/AC- scheme)
+2026-06-24 09:07:04,567 [WARNING] [clean_payroll] 6340 rows could not be converted to USD (no FX rate)
+2026-06-24 09:07:04,569 [INFO] [clean_payroll] Computed salary_usd_annual for 12660 rows
+2026-06-24 09:07:04,579 [INFO] [clean_payroll] Removed 7861 duplicate (employee_id, source) rows
+2026-06-24 09:07:04,579 [INFO] [clean_payroll] Complete — 19000 rows in, 11139 out (7861 dropped), fixes={'salary_symbols_stripped': 953, 'payroll_ids_namespaced': 19000, 'salary_usd_annual_computed': 12660, 'effective_date_parsed': 19000, 'payroll_duplicates_removed': 7861}, issues={'missing_fx_rate': 6340}
+2026-06-24 09:07:04,585 [INFO] [clean_benefits] Namespaced 12000 benefits employee_ids (GT- scheme)
+2026-06-24 09:07:04,588 [INFO] [clean_benefits] Complete — 12000 rows in/out, fixes={'benefits_ids_namespaced': 12000, 'enrollment_date_parsed': 12000}, issues={}
+2026-06-24 09:07:04,588 [INFO] ============================================================
+2026-06-24 09:07:04,588 [INFO] CLEANING COMPLETE
+2026-06-24 09:07:04,588 [INFO]   employees :  18200 rows (dropped 0)
+2026-06-24 09:07:04,589 [INFO]   payroll   :  11139 rows (dropped 7861)
+2026-06-24 09:07:04,589 [INFO]   benefits  :  12000 rows (dropped 0)
+2026-06-24 09:07:04,589 [INFO] ============================================================
+2026-06-24 09:07:04,589 [INFO] --- Deliverable 3: Deduplication ---
+2026-06-24 09:07:04,740 [WARNING] [pass1_exact_id] 199 ID-collision rows quarantined (different people share same canonical ID — artifact of ACQ_DUP_NNNNN normalisation)
+2026-06-24 09:07:04,828 [INFO] [pass1_exact_id] source_systems annotated — 14660 employees appear in >1 source, 0 payroll-only ghosts checked
+2026-06-24 09:07:04,836 [INFO] [pass1_exact_id] Complete — 18200 in, 18001 out, 199 quarantined
+2026-06-24 09:07:04,842 [INFO] [pass2_email_match] No cross-company email matches found
+2026-06-24 09:07:04,842 [INFO] [pass2_email_match] Complete — 18001 in, 18001 out
+2026-06-24 09:07:16,135 [INFO] [pass3_fuzzy_name] 748871 comparisons across 3001 ACQ × GT date-blocked pairs → 113 probable matches (score ≥ 88), 110 ACQ rows flagged
+2026-06-24 09:07:16,194 [INFO] [ghost_employee_detection] No ghost employees detected
+2026-06-24 09:07:16,203 [INFO] [dedup_benefits] Archived 750 older benefit enrollments — 11250 current records retained
+2026-06-24 09:07:16,203 [INFO] ============================================================
+2026-06-24 09:07:16,203 [INFO] DEDUPLICATION COMPLETE
+2026-06-24 09:07:16,203 [INFO]   employees       :  18001 rows
+2026-06-24 09:07:16,203 [INFO]   p1 quarantine   :    199 rows (ID collisions)
+2026-06-24 09:07:16,203 [INFO]   p2 quarantine   :      0 rows (email matches)
+2026-06-24 09:07:16,203 [INFO]   probable matches:    113 pairs (fuzzy — for HR review)
+2026-06-24 09:07:16,203 [INFO]   ghost employees :      0 rows (compliance risk)
+2026-06-24 09:07:16,203 [INFO]   benefits current:  11250 rows (750 archived)
+2026-06-24 09:07:16,203 [INFO] ============================================================
+2026-06-24 09:07:16,204 [INFO] --- Deliverable 4: Validation ---
+2026-06-24 09:07:16,204 [INFO] [validate] Running data quality checks …
+2026-06-24 09:07:16,204 [INFO] [validate] not_null.employee_id                           total=18001  passed=18001  failed=0  PASS
+2026-06-24 09:07:16,205 [INFO] [validate] not_null.first_name                            total=18001  passed=18001  failed=0  PASS
+2026-06-24 09:07:16,205 [INFO] [validate] not_null.last_name                             total=18001  passed=18001  failed=0  PASS
+2026-06-24 09:07:16,205 [INFO] [validate] not_null.email                                 total=18001  passed=18001  failed=0  PASS
+2026-06-24 09:07:16,206 [INFO] [validate] not_null.department                            total=18001  passed=17937  failed=64  FAIL
+2026-06-24 09:07:16,206 [INFO] [validate] not_null.country                               total=18001  passed=17960  failed=41  FAIL
+2026-06-24 09:07:16,207 [INFO] [validate] unique.employee_id                             total=18001  passed=18001  failed=0  PASS
+2026-06-24 09:07:16,208 [INFO] [validate] unique.email                                   total=18001  passed=9140  failed=8861  FAIL
+2026-06-24 09:07:16,209 [INFO] [validate] values_in_set.employment_type                  total=18001  passed=18001  failed=0  PASS
+2026-06-24 09:07:16,210 [INFO] [validate] values_in_set.currency                         total=11139  passed=11139  failed=0  PASS
+2026-06-24 09:07:16,212 [INFO] [validate] regex.email                                    total=18001  passed=18001  failed=0  PASS
+2026-06-24 09:07:16,213 [INFO] [validate] regex.employee_id                              total=18001  passed=18001  failed=0  PASS
+2026-06-24 09:07:16,213 [INFO] [validate] numeric_range.salary_usd_annual                total=7448  passed=5480  failed=1968  FAIL
+2026-06-24 09:07:16,217 [INFO] [validate] date_range.hire_date                           total=18001  passed=18001  failed=0  PASS
+2026-06-24 09:07:16,276 [INFO] [validate] referential_integrity.manager_id               total=16187  passed=16187  failed=0  PASS
+2026-06-24 09:07:16,277 [INFO] [validate] Complete — 15 checks, 11 passed, 4 failed
+2026-06-24 09:07:16,277 [CRITICAL] PIPELINE HALTED — 4 checks failed (threshold is 2). Review Data/processed/validation_report.html before re-running.
+2026-06-24 09:07:16,280 [INFO] [validate] CSV  → Data/processed/validation_report.csv
+2026-06-24 09:07:16,281 [INFO] [validate] HTML → Data/processed/validation_report.html
+2026-06-24 09:07:16,282 [CRITICAL] Pipeline halted by validation gate.  Review Data/processed/validation_report.html before re-running.

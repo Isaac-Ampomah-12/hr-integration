@@ -1,21 +1,3 @@
-"""
-pipeline.py — Full Pipeline Orchestrator
-GlobalTech Corp HR Integration Pipeline
-
-Runs all six deliverables end-to-end:
-  1. Ingest    — load the four raw HR sources
-  2. Clean     — normalize, standardize, and enrich
-  3. Deduplicate — three-pass dedup + ghost detection + provenance
-  4. Validate  — 15-check quality report + pipeline gate
-  5. Visualize — 6-chart EDA report (300 DPI PNG)
-  6. Export    — golden Parquet + ghost CSV + probable-match review
-
-Usage
------
-  python pipeline.py              # run everything, gate halts on >2 check failures
-  python pipeline.py --no-gate   # run everything, ignore gate result
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -32,13 +14,7 @@ from export import export_all
 
 
 def run(*, respect_gate: bool = True) -> int:
-    """
-    Execute the full pipeline.
 
-    Returns
-    -------
-    0 on success, 1 if the validation gate halted the pipeline.
-    """
     logger.info("=" * 65)
     logger.info("GlobalTech HR Integration Pipeline  —  %s", date.today())
     logger.info("=" * 65)
